@@ -1,0 +1,47 @@
+{
+  "id": "DSR-HB",
+  "title": "DSR-HB",
+  "version": "0.0.1",
+  "authors": [
+    {
+        "name": "Cold"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "esmodules": ["src/init.js"],
+  "packs": [
+    {
+        "name": "dsr-hb_twisted-grace",
+        "path": "packs/dsr-hb_twisted-grace.db",
+        "type": "Item",
+        "system": "dnd5e"
+    }
+  ],
+  "languages": [
+    {
+        "lang": "de",
+        "name": "Deutsch",
+        "path": "lang/de.json"
+    }
+  ],
+  "url": "https://github.com/Cold-1337/DSR_HB",
+  "manifest": "https://github.com/Cold-1337/DSR_HB/releases/latest/download/module.json",
+  "download": "AUTOMATIC",
+  "flags": {
+    "hotReload": {
+      "extensions": [
+        "css",
+        "hbs",
+        "json"
+      ],
+      "paths": [
+        "lang",
+        "styles",
+        "templates"
+      ]
+    }
+  }
+}

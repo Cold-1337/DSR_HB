@@ -1,0 +1,17 @@
+{
+  "name": "Twisted Grace",
+  "type": "subclass",
+  "img": "",
+  "system": {
+    "identifier": "twisted-grace",
+    "classIdentifier": "cleric",
+    "description": { "value": "<p>Placeholder</p>" },
+    "source": "DSR-HB"
+  },
+  "flags": {
+    "DSR_HB": {
+      "deity": "Hitagami",
+      "alignment": "chaotic-neutral"
+    }
+  }
+}
