@@ -1,6 +1,6 @@
 {
-  "id": "DSR-HB",
-  "title": "DSR-HB",
+  "id": "DSR_HB",
+  "title": "DSR_HB",
   "version": "0.0.1",
   "authors": [
     {
@@ -15,9 +15,11 @@
   "packs": [
     {
         "name": "dsr-hb_twisted-grace",
-        "path": "packs/dsr-hb_twisted-grace.db",
+        "label": "Twisted Grace",
+        "path": "packs/dsr-hb_twisted-grace",
         "type": "Item",
-        "system": "dnd5e"
+        "system": "dnd5e",
+        "module": "DSR_HB"
     }
   ],
   "languages": [
