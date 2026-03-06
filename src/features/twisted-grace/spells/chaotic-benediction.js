@@ -28,9 +28,17 @@ async function runChaoticBenediction({ workflow, actor, item }) {
     return;
   }
 
-  const chaosRoll = await (new Roll("1d20")).evaluate({ async: true });
+  const chaosRoll = await new Roll("1d20").evaluate();
 
   const effectFormula = item.flags?.DSR_HB?.effectFormula ?? DEFAULT_EFFECT_FORMULA;
+
+  // Upcasting: +1 Würfel pro Slot-Level über dem Basis-Level (wie Healing Word)
+  const baseLevel = item.system?.level ?? 1;
+  const castLevel = workflow.spellLevel ?? baseLevel;
+  const upcastLevels = Math.max(0, castLevel - baseLevel);
+  const scaledFormula = upcastLevels > 0
+    ? effectFormula.replace(/^(\d+)(d\d+)/, (_, count, die) => `${Number(count) + upcastLevels}${die}`)
+    : effectFormula;
 
   await whisperToGM(
     [
@@ -38,8 +46,7 @@ async function runChaoticBenediction({ workflow, actor, item }) {
       `Caster: ${actor.name}`,
       `Targets: ${targets.map(t => t.name).join(", ")}`,
       `Chaos d20: ${chaosRoll.total}`,
-      `Effect Formula: ${effectFormula}`,
-      `TEST Force DMG: ${FORCE_ALWAYS_DAMAGE ? "ON" : "OFF"}`
+      `Effect Formula: ${scaledFormula}${upcastLevels > 0 ? ` (upcast +${upcastLevels})` : ""}`
     ].join("\n")
   );
 
@@ -47,11 +54,11 @@ async function runChaoticBenediction({ workflow, actor, item }) {
 
   // 1–3: DMG
   if (d20 <= 3) {
-    const { roll, total } = await rollEffectAmountDetailed({ actor, formula: effectFormula });
+    const { roll, total } = await rollEffectAmountDetailed({ actor, formula: scaledFormula });
 
     await roll.toMessage({
       speaker: ChatMessage.getSpeaker({ actor }),
-      flavor: `DSR-HB | ${SPELL_NAME} – DAMAGE (${effectFormula})`,
+      flavor: `DSR-HB | ${SPELL_NAME} – DAMAGE (${scaledFormula})`,
       whisper: game.users.filter(u => u.isGM).map(u => u.id)
     });
 
@@ -62,11 +69,11 @@ async function runChaoticBenediction({ workflow, actor, item }) {
 
   // 4–17: HEAL
   if (d20 <= 17) {
-    const { roll, total } = await rollEffectAmountDetailed({ actor, formula: effectFormula });
+    const { roll, total } = await rollEffectAmountDetailed({ actor, formula: scaledFormula });
 
     await roll.toMessage({
       speaker: ChatMessage.getSpeaker({ actor }),
-      flavor: `DSR-HB | ${SPELL_NAME} – HEAL (${effectFormula})`,
+      flavor: `DSR-HB | ${SPELL_NAME} – HEAL (${scaledFormula})`,
       whisper: game.users.filter(u => u.isGM).map(u => u.id)
     });
 
@@ -77,7 +84,7 @@ async function runChaoticBenediction({ workflow, actor, item }) {
 
   // 18–20: GM Entscheidung
   if (game.user.isGM) {
-    await openGmDecisionDialog({ actor, targets, d20, effectFormula });
+    await openGmDecisionDialog({ actor, targets, d20, effectFormula: scaledFormula });
   } else {
     await whisperToGM(`DSR-HB | ${SPELL_NAME}: Result ${d20} => GM decision required (18–20).`);
   }
@@ -114,6 +121,10 @@ async function openGmDecisionDialog({ actor, targets, d20, effectFormula }) {
             whisper: game.users.filter(u => u.isGM).map(u => u.id)
           });
 
+          if (sideEffect) {
+            await whisperToGM(`DSR-HB | ${SPELL_NAME} – Nebenwirkung:\n${sideEffect}`);
+          }
+
           await applyDamageToTargets(targets, total);
         }
       },
@@ -130,6 +141,10 @@ async function openGmDecisionDialog({ actor, targets, d20, effectFormula }) {
             whisper: game.users.filter(u => u.isGM).map(u => u.id)
           });
 
+          if (sideEffect) {
+            await whisperToGM(`DSR-HB | ${SPELL_NAME} – Nebenwirkung:\n${sideEffect}`);
+          }
+
           await applyHealToTargets(targets, total);
         }
       }
@@ -140,7 +155,7 @@ async function openGmDecisionDialog({ actor, targets, d20, effectFormula }) {
 
 async function rollEffectAmountDetailed({ actor, formula }) {
   const rollData = actor.getRollData?.() ?? {};
-  const roll = await (new Roll(formula, rollData)).evaluate({ async: true });
+  const roll = await new Roll(formula, rollData).evaluate();
   const total = Math.max(0, Number(roll.total ?? 0));
   return { roll, total };
 }

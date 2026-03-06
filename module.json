@@ -31,7 +31,7 @@
   ],
   "url": "https://github.com/Cold-1337/DSR_HB",
   "manifest": "https://github.com/Cold-1337/DSR_HB/releases/latest/download/module.json",
-  "download": "AUTOMATIC",
+  "download": "https://github.com/Cold-1337/DSR_HB/releases/latest/download/DSR_HB.zip",
   "flags": {
     "hotReload": {
       "extensions": [
