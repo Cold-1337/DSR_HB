@@ -1,5 +1,6 @@
 import { registerDsrHbSettings } from "./settings.js";
 import { registerTwistedGrace } from "./features/twisted-grace/index.js";
+import { registerSocket } from "./utils/socket.js";
 
 console.log("DSR_HB | init loaded");
 
@@ -9,5 +10,6 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", () => {
   console.log("DSR_HB | ready");
+  registerSocket();
   registerTwistedGrace();
 });

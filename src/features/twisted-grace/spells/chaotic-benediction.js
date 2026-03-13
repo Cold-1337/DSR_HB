@@ -1,3 +1,6 @@
+import { applyHpViaSocket } from "../../../utils/socket.js";
+import { resolveHealAmount } from "./staggering-grace.js";
+
 const SPELL_NAME = "Chaotic Benediction";
 
 // true = immer DMG erzwingen
@@ -69,7 +72,7 @@ async function runChaoticBenediction({ workflow, actor, item }) {
 
   // 4–17: HEAL
   if (d20 <= 17) {
-    const { roll, total } = await rollEffectAmountDetailed({ actor, formula: scaledFormula });
+    const { roll, total, min, max } = await rollEffectAmountDetailed({ actor, formula: scaledFormula });
 
     await roll.toMessage({
       speaker: ChatMessage.getSpeaker({ actor }),
@@ -77,7 +80,8 @@ async function runChaoticBenediction({ workflow, actor, item }) {
       whisper: game.users.filter(u => u.isGM).map(u => u.id)
     });
 
-    await applyHealToTargets(targets, total);
+    const healAmount = await resolveHealAmount({ targets, normal: total, min, max });
+    await applyHealToTargets(targets, healAmount);
 
     return;
   }
@@ -133,7 +137,7 @@ async function openGmDecisionDialog({ actor, targets, d20, effectFormula }) {
         callback: async (html) => {
           const sideEffect = html.find('textarea[name="sideEffect"]').val()?.trim() ?? "";
 
-          const { roll, total } = await rollEffectAmountDetailed({ actor, formula: effectFormula });
+          const { roll, total, min, max } = await rollEffectAmountDetailed({ actor, formula: effectFormula });
 
           await roll.toMessage({
             speaker: ChatMessage.getSpeaker({ actor }),
@@ -145,7 +149,8 @@ async function openGmDecisionDialog({ actor, targets, d20, effectFormula }) {
             await whisperToGM(`DSR-HB | ${SPELL_NAME} – Nebenwirkung:\n${sideEffect}`);
           }
 
-          await applyHealToTargets(targets, total);
+          const healAmount = await resolveHealAmount({ targets, normal: total, min, max });
+          await applyHealToTargets(targets, healAmount);
         }
       }
     },
@@ -157,7 +162,14 @@ async function rollEffectAmountDetailed({ actor, formula }) {
   const rollData = actor.getRollData?.() ?? {};
   const roll = await new Roll(formula, rollData).evaluate();
   const total = Math.max(0, Number(roll.total ?? 0));
-  return { roll, total };
+  const maxRoll = await new Roll(formula, rollData).evaluate({ maximize: true });
+  const minRoll = await new Roll(formula, rollData).evaluate({ minimize: true });
+  return {
+    roll,
+    total,
+    min: Math.max(0, Number(minRoll.total ?? 0)),
+    max: Math.max(0, Number(maxRoll.total ?? 0))
+  };
 }
 
 // Targets / HP Apply
@@ -174,7 +186,7 @@ async function applyHealToTargets(targetTokens, amount) {
     const a = t.actor;
     const hp = a.system?.attributes?.hp;
     if (!hp) continue;
-    await a.update({ "system.attributes.hp.value": Math.min(hp.max, hp.value + heal) });
+    await applyHpViaSocket(a, Math.min(hp.max, hp.value + heal));
   }
 }
 
@@ -184,7 +196,7 @@ async function applyDamageToTargets(targetTokens, amount) {
     const a = t.actor;
     const hp = a.system?.attributes?.hp;
     if (!hp) continue;
-    await a.update({ "system.attributes.hp.value": Math.max(0, hp.value - dmg) });
+    await applyHpViaSocket(a, Math.max(0, hp.value - dmg));
   }
 }
 
