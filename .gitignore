@@ -1,0 +1,4 @@
+# LevelDB – temporäre und Lock-Dateien, nie committen
+packs/**/LOCK
+packs/**/LOG
+packs/**/LOG.old
