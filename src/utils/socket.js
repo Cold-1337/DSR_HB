@@ -27,6 +27,15 @@ export function registerSocket() {
       await actor.createEmbeddedDocuments("ActiveEffect", [data.effectData]);
     }
 
+    if (data.action === "applyTempHp") {
+      const actor = await fromUuid(data.actorUuid);
+      if (!actor) {
+        console.warn(`DSR_HB | Socket: Actor nicht gefunden für UUID ${data.actorUuid}`);
+        return;
+      }
+      await actor.update({ "system.attributes.hp.temp": data.value });
+    }
+
     if (data.action === "removeEffect") {
       const actor = await fromUuid(data.actorUuid);
       if (!actor) return;
@@ -48,6 +57,22 @@ export async function applyHpViaSocket(actor, value) {
   } else {
     game.socket.emit(SOCKET_NAME, {
       action: "applyHp",
+      actorUuid: actor.uuid,
+      value
+    });
+  }
+}
+
+/**
+ * Setzt die Temporary HP eines Actors.
+ * GM: direktes update(). Spieler: Anfrage via Socket an GM delegieren.
+ */
+export async function applyTempHpViaSocket(actor, value) {
+  if (game.user.isGM) {
+    await actor.update({ "system.attributes.hp.temp": value });
+  } else {
+    game.socket.emit(SOCKET_NAME, {
+      action: "applyTempHp",
       actorUuid: actor.uuid,
       value
     });

@@ -23,6 +23,14 @@ export function registerDsrHbSettings() {
     default: true
   });
 
+  game.settings.register(“DSR_HB”, “hitogamiPactEnabled”, {
+    name: “DSR-HB: Hitogami Pact aktiv”,
+    scope: “world”,
+    config: true,
+    type: Boolean,
+    default: true
+  });
+
   // Optional: “Registry-Key” für austauschbare Damage-Funktion
   game.settings.register("DSR_HB", "chaoticBenedictionDmgCalc", {
     name: "DSR-HB: Damage Calc ID (interchangeable)",

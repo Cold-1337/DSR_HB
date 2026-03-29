@@ -20,6 +20,14 @@
         "type": "Item",
         "system": "dnd5e",
         "module": "DSR_HB"
+    },
+    {
+        "name": "liminal-bargain",
+        "label": "Liminal Bargain",
+        "path": "packs/liminal-bargain",
+        "type": "Item",
+        "system": "dnd5e",
+        "module": "DSR_HB"
     }
   ],
   "languages": [
