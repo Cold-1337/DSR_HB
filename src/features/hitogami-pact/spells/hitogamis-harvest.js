@@ -6,6 +6,7 @@ export function registerHitogamisHarvest() {
   Hooks.on("midi-qol.RollComplete", async (workflow) => {
     try {
       const actor = workflow?.actor;
+      console.log(`DSR_HB | Harvest debug | hook fired | actor: ${actor?.name} | isGM: ${game.user.isGM} | isOwner: ${actor?.isOwner} | damageTotal: ${workflow.damageTotal}`);
       if (!actor) return;
 
       // Nur der kontrollierende Spieler handelt – GM nur als Fallback wenn kein Spieler online
@@ -17,6 +18,7 @@ export function registerHitogamisHarvest() {
 
       // Actor muss das Feature besitzen
       const hasFeature = actor.items.some(i => (i.name ?? "").trim() === FEATURE_NAME);
+      console.log(`DSR_HB | Harvest debug | hasFeature: ${hasFeature} | damageTotal: ${workflow.damageTotal}`);
       if (!hasFeature) return;
 
       // Schaden muss angewendet worden sein
@@ -25,6 +27,7 @@ export function registerHitogamisHarvest() {
       // Mindestens ein Ziel muss auf 0 HP reduziert worden sein
       const targets = workflow.targets ? Array.from(workflow.targets) : [];
       const killed = targets.filter(t => (t.actor?.system?.attributes?.hp?.value ?? 1) === 0);
+      console.log(`DSR_HB | Harvest debug | targets: ${targets.length} | killed: ${killed.length}`);
       if (!killed.length) return;
 
       await runHitogamisHarvest({ actor });
